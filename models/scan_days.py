@@ -13,7 +13,7 @@ def scan_days():
         #     day_times.append( str(7+int(0.5*(n_i))) + ':' + '00' )
         # else:
         #     day_times.append( str(7+int(0.5*(n_i-1))) + ':' + '30' ) 
-    print(day_times)
+    # print(day_times)
     # day = [day_empty, [user_id], [start_tine], [end_time]]
     day = [day_empty.copy(), [[], [], []], day_times.copy()]
     days = {}
@@ -54,22 +54,29 @@ def write_ses(active, user_id):
 
 def del_ses(user_id, scan_days, stroka):
     pre_day = stroka.strip().split('. ')
-    day_time = pre_day[1].strip().split(';')
+    day_time = pre_day[1].strip().split('; ')
     day = day_time[0].strip()
     time_start = day_time[1].split(' - ')[0]
     time_end = day_time[1].split(' - ')[1]
+    # print(time_start)
+    # print(time_end)
     number = 0
     for x in range(len(scan_days[day][1][0])):
         if scan_days[day][1][1][x] == time_start and scan_days[day][1][2][x] == time_end:
             number = x
             break
-    del scan_days[day][1][0][number]
+
+    # print(scan_days[day][1][0][number])
+    # print(scan_days[day][1][1][number])
+    # print(scan_days[day][1][2][number])
+    
     del scan_days[day][1][1][number]
     del scan_days[day][1][2][number]
+    del scan_days[day][1][0][number]
     f = open('./days/' + day + '.txt', 'w', encoding='utf-8')
     res = ''
     for i in range(len(scan_days[day][1][0])):
-        res+= scan_days[day][1][1][i] + ',' + scan_days[day][1][1][i] + '/' + str(scan_days[day][1][0][i])
+        res+= '\n' + scan_days[day][1][1][i] + ',' + scan_days[day][1][2][i] + '/' + str(scan_days[day][1][0][i])
     f.write(res)
     f.close()
 

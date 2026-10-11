@@ -49,7 +49,7 @@ while True:
         # keyboard = vk_keyboard.get_empty_keyboard()
         # message = 'Произошла ошибка. Попробуйте другую команду'
         # write_msg(event.user_id, message, keyboard)
-        time.sleep(5)  # Ждем минуту перед повторной попыткой
+        time.sleep(10)  # Ждем минуту перед повторной попыткой
     
 
 
