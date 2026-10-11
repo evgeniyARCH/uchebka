@@ -29,7 +29,7 @@ class Vk_bot:
         keyboard = Vk_keys.k_nachat(self)
 
         primer_list = [[], [None, ['', ''], None]]
-
+        sucs = 1
         if self.user_id in active:
             sucs = 1
             if self.request == 'Назад':
