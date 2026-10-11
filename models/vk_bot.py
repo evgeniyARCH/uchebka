@@ -76,8 +76,8 @@ class Vk_bot:
 
                     if active[self.user_id][0][-1] == 'Запись в учебку':
                         active[self.user_id][1][0] = self.request
-                        otvet = Vk_otvets.o_start_time(self)
-                        keyboard = Vk_keys.k_start_time(self)
+                        keyboard, c_c= Vk_keys.k_start_time(self)
+                        otvet = Vk_otvets.o_start_time(self, c_c)
                         active[self.user_id][0].append('Выбрать день')
 
                     elif active[self.user_id][0][-1] == 'Выбрать день' and active[self.user_id][1][1][0] == '':
@@ -126,8 +126,11 @@ class Vk_otvets(Vk_bot):
         return "Выберите день для записи"
 
 
-    def o_start_time(self): # После выбора дня
-        return 'Выберите время начала брони. Например, если Вы хотите записаться c 10:00 до 11:00, выберите 10:00'
+    def o_start_time(self, c_c): # После выбора дня
+        res = 'Выберите время начала брони. Например, если Вы хотите записаться c 10:00 до 11:00, выберите 10:00'
+        if c_c == 0:
+            res = 'К сожалению, уже всё разобрали. Нажмите "Назад" и выберите другой день'
+        return res
     
     def o_end_time(self): # После выбора дня
         return 'Выберите время окончания брони. Например, если Вы хотите записаться c 10:00 до 11:00, выберите 11:00'
@@ -137,8 +140,8 @@ class Vk_otvets(Vk_bot):
         return res
     
     def o_write(self):
-        res = f'Вы успешно забронировали учебку {self.active[self.user_id][1][0]} с {self.active[self.user_id][1][1][0]} до {self.active[self.user_id][1][1][1]}'
-        return 'Вы успешно забронировали учебку. \nДля новой записи нажмите "Начать"' 
+        res = f'Вы успешно забронировали учебку {self.active[self.user_id][1][0]} с {self.active[self.user_id][1][1][0]} до {self.active[self.user_id][1][1][1]}. \nДля новой записи нажмите "Начать"\nДля просмотра ваших записей нажмите "Посмотреть мои текущие записи"'
+        return res
     
     def o_check_my(self):
         keys = list(self.scan_days)
@@ -193,6 +196,7 @@ class Vk_keys(Vk_bot):
 
     def k_nachat(self):
         vk_keyboard = VkKeyboard()
+        # vk_keyboard.add_line()
         vk_keyboard.add_button('Начать', payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
         keyboard = vk_keyboard.get_keyboard()
         return keyboard
@@ -226,10 +230,12 @@ class Vk_keys(Vk_bot):
         date_tm = self.scan_days[self.active[self.user_id][1][0]][2]
         b = 0
         data, time = ad.act_day()
+        c = 0
         if data != self.active[self.user_id][1][0]:
             time = '00:00'
         for y in range(len(times)-1):
             if times[y] == '0' and self.scan_days[self.active[self.user_id][1][0]][2][y] >= time:
+                c = 1
                 if b == 5:
                     b = 1
                     vk_keyboard.add_line()
@@ -239,10 +245,11 @@ class Vk_keys(Vk_bot):
                     vk_keyboard.add_button(date_tm[y-1], payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
                     b+=1
                 vk_keyboard.add_button(date_tm[y], payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-        vk_keyboard.add_line()
+        if c == 1:
+            vk_keyboard.add_line()
         vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
         keyboard = vk_keyboard.get_keyboard()
-        return keyboard
+        return keyboard, c
     
     def k_end_time(self):
         vk_keyboard = VkKeyboard()
@@ -283,6 +290,8 @@ class Vk_keys(Vk_bot):
         sd.write_ses(self.active, self.user_id)
         vk_keyboard = VkKeyboard()
         vk_keyboard.add_button('Начать', payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
+        vk_keyboard.add_line()
+        vk_keyboard.add_button('Посмотреть мои текущие записи', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
         keyboard = vk_keyboard.get_keyboard()
         return keyboard
     

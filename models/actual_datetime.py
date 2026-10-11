@@ -41,7 +41,7 @@ def add_new_days():
                 data = day + ' ' + mouth_str
                 os.remove('./days/' + data + '.txt')
 
-                next_day = datetime.datetime.now() + datetime.timedelta(days=2)
+                next_day = datetime.datetime.now() + datetime.timedelta(days=4)
                 day = next_day.strftime('%d')
                 mouth = next_day.strftime('%m')
                 mouth_str = mouth_slov[mouth]
