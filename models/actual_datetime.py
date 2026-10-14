@@ -31,7 +31,7 @@ def add_new_days():
     global mouth_slov
     while True:
         data, time = act_day()
-        if time == '00:10':
+        if time == '00:01':
             print('Пора')
             try:
                 old_day = datetime.datetime.now() - datetime.timedelta(days=1)

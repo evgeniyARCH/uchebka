@@ -60,11 +60,14 @@ def del_ses(user_id, scan_days, stroka):
     time_end = day_time[1].split(' - ')[1]
     # print(time_start)
     # print(time_end)
+    c = 0
     number = 0
     for x in range(len(scan_days[day][1][0])):
         if scan_days[day][1][1][x] == time_start and scan_days[day][1][2][x] == time_end:
+            c = 1
             number = x
             break
+    if c == 0: print(1/0)
 
     # print(scan_days[day][1][0][number])
     # print(scan_days[day][1][1][number])
@@ -80,4 +83,22 @@ def del_ses(user_id, scan_days, stroka):
     f.write(res)
     f.close()
 
+def del_admin(data):
+    day = int(data.strip().split()[0])
+    time = int(data.strip().split()[1])
+    all_items = os.listdir('./days')
+    for i in range(len(all_items)):
+        f = open('./days/' + all_items[i], 'r', encoding= 'utf-8') 
+        f_list = f.read().strip().split('\n')
+        f.close()
+        if day == i:
+            del f_list[time]
+
+        res = ''
+        for x in range(len(f_list)):
+            res+= '\n' + f_list[x]
+        f = open('./days/' + all_items[i], 'w', encoding= 'utf-8') 
+        f.write(res)
+        f.close()
+        
             
