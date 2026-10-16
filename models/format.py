@@ -20,7 +20,7 @@ def format(active, text, type, times, used_times = []):
                 print(1/0)
             else:
                 for i in range(times.index(text) - times.index(active[1][1][0]) - 1):
-                    print(used_times[times.index(text) + i + 1])
+                    # print(used_times[times.index(text) + i + 1])
                     if used_times[times.index(active[1][1][0]) + i + 1] == '1':
                         print(1/0)
 

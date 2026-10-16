@@ -36,6 +36,7 @@ class Vk_bot:
 
         primer_list = [[], [None, ['', ''], None]]
         sucs = 1
+        # if 0 == 0:
         try:
             if self.user_id in active:
                 if self.request == 'Назад':
@@ -157,17 +158,35 @@ class Vk_otvets(Vk_bot):
         return 'Добро пожаловать в Админский режим. \nДля дальнейших действий выбери функцию из предложенного списка'
 
     def o_admin_day(self):
+        # res = ''
+        # all_items = os.listdir('./days')
+        # for i in range(len(all_items)):
+        #     f = open('./days/' + all_items[i], 'r', encoding= 'utf-8') 
+        #     f_list = f.read().strip().split('\n')
+        #     f.close()
+        #     res+= str(i) + '. ' + all_items[i] + '\n\n'
+        #     if f_list != ['']:
+        #         for x in range(len(f_list)):
+        #             res+= str(x) + '. ' + f_list[x] + '\n'
+
+
+            
+        #     res+= '\n'
+        # return res
+
+        keys = list(self.scan_days)
         res = ''
-        all_items = os.listdir('./days')
-        for i in range(len(all_items)):
-            f = open('./days/' + all_items[i], 'r', encoding= 'utf-8') 
-            f_list = f.read().strip().split('\n')
-            f.close()
-            res+= str(i) + '. ' + all_items[i] + '\n\n'
-            if f_list != ['']:
-                for x in range(len(f_list)):
-                    res+= str(x) + '. ' + f_list[x] + '\n'
-            res+= '\n'
+        a = 1
+        for i in range(len(self.scan_days)):
+            res += str(i) + ' ' + str(keys[i]) + '\n'
+            cur_d = self.scan_days[keys[i]]
+            
+            for x in range(len(cur_d[1][0])):
+                res+= str(x) + ' ' + str(cur_d[1][1][x]) + ' - ' + str(cur_d[1][2][x]) + ' @id' + str(cur_d[1][0][x]) + '\n'
+                a+=1
+
+            res+='\n'
+        if res == '': return 'Записей нет'
         return res
 
     def o_admin_del(self):
@@ -191,15 +210,23 @@ class Vk_otvets(Vk_bot):
         elif c_c == 2:
             res = 'К сожалению, у вас уже есть 2 записи. Нажмите "Назад" и выберите другой день'
         if self.scan_days[self.active[self.user_id][1][0]][1][0] != []:
-            res+= '\n\nНиже указано время, которое уже занято на этот день:\n'
-            times = []
-            for i in range(len(self.scan_days[self.active[self.user_id][1][0]][1][0])):
-                times.append(self.scan_days[self.active[self.user_id][1][0]][1][1][i])
             
-            for x in range(len(self.scan_days[self.active[self.user_id][1][0]][1][0])):
+            times = []
+            data, time = ad.act_day()
+            if data != self.active[self.user_id][1][0]:
+                time = '00:00'
+            for i in range(len(self.scan_days[self.active[self.user_id][1][0]][1][0])):
+                if self.scan_days[self.active[self.user_id][1][0]][1][1][i] >= time:
+                    times.append(self.scan_days[self.active[self.user_id][1][0]][1][1][i])
+                
+            if times != []: res+= '\n\nНиже указано время, которое уже занято на этот день:\n'
+            for x in range(len(times)):
+                
                 res+= '\n' + str(x+1) + '. ' + min(times) + ' - ' + self.scan_days[self.active[self.user_id][1][0]][1][2][times.index(min(times))]
                 if self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))] == self.user_id:
-                    res+= ' -Ваша запись'
+                    res+= ' - Ваша запись'
+                else:
+                    res+= ' - @id' + str(self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))]) 
                 times[times.index(min(times))] = '23:59'
 
         return res

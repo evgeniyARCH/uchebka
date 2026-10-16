@@ -20,7 +20,6 @@ def write_msg(user_id, message, keyboard):
 token = "vk1.a.boY8K7k2aFtc3I4KLKfFNvTIFV3bXlVxN9gmC-cfwfb7x7Q1iU6I_AwzijgDdTztPYuO_UwmQkD0l6_OszDVNp8oMjPkP3Ijagb-6pN_3w0ZrNEVE6oTKBlMXNQeyIP_KktLmjygAQTg5-TgudQk9HMXNGoa0H2ddg22xoa_yZ-R198rij4MaXcvsPIbh6Sxvu79MADs6NyJNPWKP1tpyA"
 # Авторизуемся как сообщество
 vk = vk_api.VkApi(token=token)
-
 # Работа с сообщениями
 longpoll = VkLongPoll(vk)
 
@@ -38,6 +37,7 @@ while True:
                 if event.to_me:
                 
                     # Сообщение от пользователя
+
                     request = event.text
                     scan_days = sd.scan_days()
                     count_user = format.count_for_userid(event.user_id, scan_days)
