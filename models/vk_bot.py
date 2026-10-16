@@ -209,6 +209,7 @@ class Vk_otvets(Vk_bot):
             res = 'К сожалению, уже всё разобрали. Нажмите "Назад" и выберите другой день'
         elif c_c == 2:
             res = 'К сожалению, у вас уже есть 2 записи. Нажмите "Назад" и выберите другой день'
+        
         if self.scan_days[self.active[self.user_id][1][0]][1][0] != []:
             
             times = []
@@ -216,8 +217,8 @@ class Vk_otvets(Vk_bot):
             if data != self.active[self.user_id][1][0]:
                 time = '00:00'
             for i in range(len(self.scan_days[self.active[self.user_id][1][0]][1][0])):
-                if self.scan_days[self.active[self.user_id][1][0]][1][1][i] >= time:
-                    times.append(self.scan_days[self.active[self.user_id][1][0]][1][1][i])
+                #if self.scan_days[self.active[self.user_id][1][0]][1][1][i] >= time: # or (i < len(self.scan_days[self.active[self.user_id][1][0]][1][0])-1 and self.scan_days[self.active[self.user_id][1][0]][1][1][i+1] >= time and self.scan_days[self.active[self.user_id][1][0]][1][1][i] < time) or (i == len(self.scan_days[self.active[self.user_id][1][0]][1][0])-1 and self.scan_days[self.active[self.user_id][1][0]][1][1][i] < time):
+                times.append(self.scan_days[self.active[self.user_id][1][0]][1][1][i])
                 
             if times != []: res+= '\n\nНиже указано время, которое уже занято на этот день:\n'
             for x in range(len(times)):
