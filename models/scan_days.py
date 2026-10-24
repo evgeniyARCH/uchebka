@@ -3,19 +3,7 @@ import copy
 
 
 def scan_days():
-    n = 0.5
-    n_day = int( ((23 - 7) / n) + 1)
-    day_empty = []
-    day_times = ['07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00']
-    for n_i in range(n_day):
-        day_empty.append('0')
-        # if n_i%2 == 0:
-        #     day_times.append( str(7+int(0.5*(n_i))) + ':' + '00' )
-        # else:
-        #     day_times.append( str(7+int(0.5*(n_i-1))) + ':' + '30' ) 
-    # print(day_times)
-    # day = [day_empty, [user_id], [start_tine], [end_time]]
-    day = [day_empty.copy(), [[], [], []], day_times.copy()]
+    day = [None, [[], [], []]]
     days = {}
     all_items = os.listdir('./days')
     for i in range(len(all_items)):
@@ -39,8 +27,6 @@ def scan_days():
                 days[a][1][0].append(cur_ses_userid)
                 days[a][1][1].append(cur_ses_start)
                 days[a][1][2].append(cur_ses_end)
-                for y in range(days[a][2].index(cur_ses_end) - days[a][2].index(cur_ses_start) + 1):
-                    days[a][0][days[a][2].index(cur_ses_start)+y] = '1'
 
     # print(days)
     return days
