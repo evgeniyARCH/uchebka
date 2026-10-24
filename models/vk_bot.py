@@ -383,7 +383,7 @@ class Vk_keys(Vk_bot):
                     r = 1
                 else:
                     for x in range(len(self.scan_days[day][1][0])):
-                        if datetime.strptime(self.scan_days[day][1][1][x], "%H:%M") <= (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) < datetime.strptime(self.scan_days[day][1][2][x], "%H:%M"):
+                        if datetime.strptime(self.scan_days[day][1][1][x], "%H:%M") - timedelta(minutes=20) <= (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) < datetime.strptime(self.scan_days[day][1][2][x], "%H:%M"):
                             r = 1
                 
                 
@@ -426,11 +426,14 @@ class Vk_keys(Vk_bot):
             if ( (datetime.strptime(self.active[self.user_id][1][1][0], "%H:%M") + timedelta(hours=3)) < (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) ):
                 d = False
                 r = 1 
-            if (datetime.strptime(self.active[self.user_id][1][1][0], "%H:%M") >= (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) ):
+            if (datetime.strptime(self.active[self.user_id][1][1][0], "%H:%M") + timedelta(minutes=20) >= (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) ):
                 r = 1 
             else:
                 for x in range(len(self.scan_days[day][1][0])):
                     if ( datetime.strptime(self.scan_days[day][1][1][x], "%H:%M") < (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) <= datetime.strptime(self.scan_days[day][1][2][x], "%H:%M") ):
+                        r = 1
+                        d = False
+                    if  ( datetime.strptime(self.active[self.user_id][1][1][0], "%H:%M") < datetime.strptime(self.scan_days[day][1][1][x], "%H:%M") and datetime.strptime(self.scan_days[day][1][2][x], "%H:%M") < (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) ):
                         r = 1
                         d = False
 
