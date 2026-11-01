@@ -5,21 +5,31 @@ from vk_api.utils import get_random_id
 
 from models import actual_datetime as ad
 from models import scan_days as sd
+from models import stirka_sd as st_sd
 import os
 import copy
 from models import format
+from models import format_st
 from datetime import datetime, timedelta
 
+from models.vk_uchebka_OK import Vk_keys, Vk_otvets
+from models.vk_stirka_OK import Vk_keys_st, Vk_otvets_st
+
 class Vk_bot:
-    def __init__(self, request, user_id, active, scan_days, count_user):
+    def __init__(self, request, user_id, active):
         print(request)
         self.request = request
         self.user_id = user_id
         self.active = active 
-        self.scan_days = scan_days
-        self.count_user = count_user
+        if self.user_id in active:
+            if active[self.user_id][2] == 'uchebka':
+                self.scan_days = sd.scan_days()
+                self.count_user = format.count_for_userid(self.user_id, self.scan_days)
+            elif active[self.user_id][2] == 'stirka':
+                self.scan_days, self.scan_days_full = st_sd.scan_days()
+                self.count_user = format_st.count_for_userid(self.user_id, self.scan_days)
 
-    ADMINS = [214262849,548147571]
+    ADMINS = [214262849, 548147571]
     # ADMIN_EVGEN = 548147571
 
     # active = { user_id: [[command1, command2,...], [day, stiralka, time, command(delete/create)]], user_name, tabl} #OLD 
@@ -32,11 +42,11 @@ class Vk_bot:
 
         # Значения пустышки
         active = self.active
-        otvet = 'Неизвестная команда. \nДля записи в учебку нажми "Начать"'
+        otvet = 'Неизвестная команда. \nДля записи в учебку/на стирку нажмите "Начать"'
         keyboard = Vk_keys.k_nachat(self)
 
-        primer_list = [[], [None, ['', ''], True]]
-        sucs = 1
+        primer_list = [[], [None, ['', ''], None], None]
+        
         # if 0 == 0:
         try:
             if self.user_id in active:
@@ -44,6 +54,136 @@ class Vk_bot:
                     self.request = active[self.user_id][0][-1]
                     del active[self.user_id][0][-1]
 
+            if self.request == 'Начать':
+                # active[self.user_id] = primer_list.copy()
+                if self.user_id in active:
+                    del active[self.user_id]
+                active[self.user_id] = copy.deepcopy(primer_list)
+                active[self.user_id][0].append('zero')
+                otvet = Vk_otvets.o_start(self)
+                keyboard = Vk_keys.k_start(self)
+
+            elif self.request == 'zero':
+                otvet = 'Вы вышли из режима записи. \nДля записи в учебку/на стирку нажми "Начать"'
+                del active[self.user_id]
+
+            if self.user_id in active:
+                if self.request == 'Запись на стирку' and (active[self.user_id][2] == None or active[self.user_id][2] == 'stirka'):
+                    active[self.user_id][2] = 'stirka'
+                    self.scan_days, self.scan_days_full = st_sd.scan_days()
+                    self.count_user = format_st.count_for_userid(self.user_id, self.scan_days)
+                    otvet = Vk_otvets_st.o_zapis(self)
+                    keyboard = Vk_keys_st.k_zapis(self)
+                    active[self.user_id][0].append('Начать')
+                elif self.request == 'Запись в учебку' and (active[self.user_id][2] == None or active[self.user_id][2] == 'uchebka'):
+                    active[self.user_id][2] = 'uchebka'
+                    self.scan_days = sd.scan_days()
+                    self.count_user = format.count_for_userid(self.user_id, self.scan_days)
+                    otvet = Vk_otvets.o_zapis(self)
+                    keyboard = Vk_keys.k_zapis(self)
+                    active[self.user_id][0].append('Начать')
+
+
+
+            if self.user_id in active and active[self.user_id][2] == 'stirka':
+                sucs_stirk = 1
+                if self.request == 'Выбрать день':
+                    active[self.user_id][0].append('Запись на стирку')
+                    active[self.user_id][1][1] = ['', '']
+                    otvet = Vk_otvets_st.o_zapis_day(self)
+                    keyboard = Vk_keys_st.k_day(self)
+
+                elif self.request == 'Подтвердить' and active[self.user_id][1][0] != None and active[self.user_id][1][1][0] != '' and active[self.user_id][1][1][1] != '' and self.count_user < 1:
+                    keyboard = Vk_keys_st.k_write(self)
+                    otvet = Vk_otvets_st.o_write(self)
+
+                elif self.request == 'Посмотреть мои текущие записи':
+                    otvet = Vk_otvets_st.o_check_my(self)
+                    keyboard = Vk_keys_st.k_check_my(self, otvet)
+                    active[self.user_id][0].append('Запись на стирку')
+
+                elif self.request == 'Удалить запись':
+                    otvet = Vk_otvets_st.o_del(self)
+                    keyboard = Vk_keys_st.k_del(self)
+                    active[self.user_id][0].append('Посмотреть мои текущие записи')
+
+                elif self.request == 'Админский режим' and (self.user_id in self.ADMINS):
+                    active[self.user_id][0].append('Запись на стирку')
+                    otvet = Vk_otvets_st.o_menu_admin(self)
+                    keyboard = Vk_keys_st.k_menu_admin(self)
+
+                elif self.request == 'Посмотреть логи' and (self.user_id in self.ADMINS):
+                    active[self.user_id][0].append('Админский режим')
+                    otvet = Vk_otvets_st.o_admin_logs(self)
+                    keyboard = Vk_keys_st.k_prev(self)
+
+                elif self.request == 'Посмотреть все записи' and (self.user_id in self.ADMINS):
+                    active[self.user_id][0].append('Админский режим')
+                    otvet = Vk_otvets_st.o_admin_day(self)
+                    keyboard = Vk_keys_st.k_admin_day(self)
+
+                elif self.request == 'Удалить строку' and (self.user_id in self.ADMINS):
+                    active[self.user_id][0].append('Посмотреть все записи')
+                    otvet = Vk_otvets_st.o_admin_del(self)
+                    keyboard = Vk_keys_st.k_prev(self)
+
+                else:
+                    sucs_stirk = 0
+
+                
+
+                if sucs_stirk == 0:
+
+                    if active[self.user_id][0][-1] == 'Запись на стирку':
+                        if self.request in list(self.scan_days):
+                        # if format_st.detect_zap(self.user_id, active, self.scan_days_full):
+                            active[self.user_id][1][0] = self.request
+                            keyboard, c_c= Vk_keys_st.k_start_time(self)
+                            otvet = Vk_otvets_st.o_start_time(self, c_c)
+                            active[self.user_id][0].append('Выбрать день')
+                        else: 
+                            otvet = 'Вы ввели несуществующий в базе день. \nПопробуйте еще раз'
+                            keyboard = Vk_keys_st.k_day(self)
+
+                    elif active[self.user_id][0][-1] == 'Выбрать день' and active[self.user_id][1][1][0] == '' and self.count_user < 1 and self.active[self.user_id][1][2]:
+                        if format_st.format_time(user_id=self.user_id, active=active, request=self.request.strip(), scan_days=self.scan_days, type=0, admins=self.ADMINS):
+                            active[self.user_id][1][1][0] = self.request
+                            active[self.user_id][1][1][1] = datetime.strftime(datetime.strptime(self.request.strip(), "%H:%M") + timedelta(hours=1), "%H:%M")
+                            # otvet = Vk_otvets_st.o_end_time(self)
+                            # keyboard = Vk_keys_st.k_end_time(self)
+                            otvet = Vk_otvets_st.o_post_time(self)
+                            keyboard = Vk_keys_st.k_post_time(self)
+                            active[self.user_id][0].append('Выбрать день')
+                        else:
+                            otvet = 'Вы ввели некорректное время или время уже занято. \nПопробуйте еще раз'
+                            keyboard= Vk_keys_st.k_start_time(self)
+
+                    elif active[self.user_id][0][-1] == 'Посмотреть мои текущие записи':
+                        # active[self.user_id][1][1][1] = self.request
+                        otvet = Vk_otvets_st.o_s_del(self)
+                        keyboard = Vk_keys_st.k_nachat(self)
+                        active[self.user_id][0].append('Начать')
+                        st_sd.del_ses(self.user_id, self.scan_days, self.request)
+
+                        pre_day = self.request.strip().split('. ')
+                        day_time = pre_day[1].strip().split('; ')
+                        active[self.user_id][1][0] = day_time[0].strip()
+                        active[self.user_id][1][1][0] = day_time[1].split(' - ')[0]
+                        active[self.user_id][1][1][1] = day_time[1].split(' - ')[1]
+                        st_sd.create_log(self.user_id, active, 'Удаление')
+
+                    elif active[self.user_id][0][-1] == 'Посмотреть все записи' and (self.user_id in self.ADMINS):
+                        # active[self.user_id][1][1][1] = self.request
+                        st_sd.del_admin(self.request)
+                        otvet = Vk_otvets_st.o_s_del(self)
+                        keyboard = Vk_keys_st.k_nachat(self)
+                        active[self.user_id][0].append('Начать')
+
+
+
+
+            if self.user_id in active and active[self.user_id][2] == 'uchebka':
+                sucs_uch = 1
                 if self.request == 'Выбрать день' and self.count_user < 8:
                     active[self.user_id][0].append('Запись в учебку')
                     active[self.user_id][1][1] = ['', '']
@@ -65,7 +205,7 @@ class Vk_bot:
                     active[self.user_id][0].append('Посмотреть мои текущие записи')
 
                 elif self.request == 'Админский режим' and (self.user_id in self.ADMINS):
-                    active[self.user_id][0].append('Начать')
+                    active[self.user_id][0].append('Запись в учебку')
                     otvet = Vk_otvets.o_menu_admin(self)
                     keyboard = Vk_keys.k_menu_admin(self)
 
@@ -80,23 +220,11 @@ class Vk_bot:
                     keyboard = Vk_keys.k_prev(self)
 
                 else:
-                    sucs = 0
+                    sucs_uch = 0
 
-            if self.request == 'Начать' or self.request == 'Запись в учебку':
-                # active[self.user_id] = primer_list.copy()
-                if self.user_id in active:
-                    del active[self.user_id]
-                active[self.user_id] = copy.deepcopy(primer_list)
-                active[self.user_id][0].append('zero')
-                otvet = Vk_otvets.o_zapis(self)
-                keyboard = Vk_keys.k_zapis(self)
+                
 
-            elif self.request == 'zero':
-                otvet = 'Вы вышли из режима записи. \nДля записи в учебку нажми "Начать"'
-                del active[self.user_id]
-
-            else:
-                if self.user_id in active and sucs == 0:
+                if sucs_uch == 0:
 
                     if active[self.user_id][0][-1] == 'Запись в учебку' and self.count_user < 8:
                         if self.request in list(self.scan_days):
@@ -115,7 +243,7 @@ class Vk_bot:
                             keyboard = Vk_keys.k_end_time(self)
                             active[self.user_id][0].append('Выбрать день')
                         else:
-                            otvet = 'Вы ввели некорректное время. \nПопробуйте еще раз'
+                            otvet = 'Вы ввели некорректное время или время уже занято. \nПопробуйте еще раз'
                             keyboard= Vk_keys.k_start_time(self)
 
                     elif active[self.user_id][0][-1] == 'Выбрать день' and active[self.user_id][1][1][1] == '' and self.count_user < 8 and self.active[self.user_id][1][2]:
@@ -125,7 +253,7 @@ class Vk_bot:
                             keyboard = Vk_keys.k_post_time(self)
                             active[self.user_id][0].append('Выбрать день')
                         else:
-                            otvet = 'Вы ввели некорректное время. \nПопробуйте еще раз'
+                            otvet = 'Вы ввели некорректное время или время уже занято. \nПопробуйте еще раз'
                             keyboard= Vk_keys.k_end_time(self)
 
                     elif active[self.user_id][0][-1] == 'Посмотреть мои текущие записи':
@@ -141,13 +269,17 @@ class Vk_bot:
                         otvet = Vk_otvets.o_s_del(self)
                         keyboard = Vk_keys.k_nachat(self)
                         active[self.user_id][0].append('Начать')
-                        
+
+                            
         except:
-            otvet = 'Неизвестная команда. \nДля записи в учебку нажми "Начать"'
+            otvet = 'Неизвестная команда. \nДля записи в учебку/на стирку нажмите "Начать"'
             keyboard = Vk_keys.k_nachat(self)
-            del active[self.user_id]
+            if self.user_id in active:
+                del active[self.user_id]
 
-
+        if otvet == 'Неизвестная команда. \nДля записи в учебку/на стирку нажмите "Начать"':
+            if self.user_id in active:
+                del active[self.user_id]
         
 
 
@@ -159,351 +291,4 @@ class Vk_bot:
 
 
 
-class Vk_otvets(Vk_bot):
-    def __init__(self, request, user_id, active):
-        super().__init__(request, user_id, active)
 
-    def o_menu_admin(self):
-        return 'Добро пожаловать в Админский режим. \nДля дальнейших действий выбери функцию из предложенного списка'
-
-    def o_admin_day(self):
-        # res = ''
-        # all_items = os.listdir('./days')
-        # for i in range(len(all_items)):
-        #     f = open('./days/' + all_items[i], 'r', encoding= 'utf-8') 
-        #     f_list = f.read().strip().split('\n')
-        #     f.close()
-        #     res+= str(i) + '. ' + all_items[i] + '\n\n'
-        #     if f_list != ['']:
-        #         for x in range(len(f_list)):
-        #             res+= str(x) + '. ' + f_list[x] + '\n'
-
-
-            
-        #     res+= '\n'
-        # return res
-
-        keys = list(self.scan_days)
-        res = ''
-        a = 1
-        for i in range(len(self.scan_days)):
-            res += str(i) + ' ' + str(keys[i]) + '\n'
-            cur_d = self.scan_days[keys[i]]
-            
-            for x in range(len(cur_d[1][0])):
-                res+= str(x) + ' ' + str(cur_d[1][1][x]) + ' - ' + str(cur_d[1][2][x]) + ' @id' + str(cur_d[1][0][x]) + '\n'
-                a+=1
-
-            res+='\n'
-        if res == '': return 'Записей нет'
-        return res
-
-    def o_admin_del(self):
-        return 'Теперь введи номер нужного дня и строки в формате "1 2" (БЕЗ КАВЫЧЕК)'
-
-    def o_zapis(self): # Запись на стирку
-        if self.count_user <8:
-            res = 'Вы можете выбрать день и время для записи в учебку. Для этого нажмите "Выбрать день". \nЕсли вы хотите посмотреть свои текущие записи, нажмите "Посмотреть мои текущие записи"'
-        else:
-            res = 'К сожалению, у вас закончился лимит записей. \nДля возможности создать новую запись удалите одну из своих записей'
-        return res
-
-    def o_zapis_day(self):
-        return "Выберите день для записи"
-
-
-    def o_start_time(self, c_c): # После выбора дня
-        res = 'Выберите время начала брони. Например, если Вы хотите записаться c 10:00 до 11:00, выберите 10:00. \nЕсли же вы хотите выбрать более точное время (до 1 минуты), то введите его с помощью клавиатуры \nЕсли пропали кнопки - нажмите на квадрат с четырмя точками правее поля ввода текста \nУчтите, что ограничения по времени на 1 запись составляют 3 часа, а ограничение по количеству записей в день - 2 записи'
-        if c_c == 0:
-            res = 'К сожалению, уже всё разобрали. Нажмите "Назад" и выберите другой день'
-        elif c_c == 2:
-            res = 'К сожалению, у вас уже есть 2 записи. Нажмите "Назад" и выберите другой день'
-        
-        if self.scan_days[self.active[self.user_id][1][0]][1][0] != []:
-            
-            times = []
-            data, time = ad.act_day()
-            if data != self.active[self.user_id][1][0]:
-                time = '00:00'
-            for i in range(len(self.scan_days[self.active[self.user_id][1][0]][1][0])):
-                #if self.scan_days[self.active[self.user_id][1][0]][1][1][i] >= time: # or (i < len(self.scan_days[self.active[self.user_id][1][0]][1][0])-1 and self.scan_days[self.active[self.user_id][1][0]][1][1][i+1] >= time and self.scan_days[self.active[self.user_id][1][0]][1][1][i] < time) or (i == len(self.scan_days[self.active[self.user_id][1][0]][1][0])-1 and self.scan_days[self.active[self.user_id][1][0]][1][1][i] < time):
-                times.append(datetime.strptime(self.scan_days[self.active[self.user_id][1][0]][1][1][i], "%H:%M")) 
-                
-            if times != []: res+= '\n\nНиже указано время, которое уже занято на этот день:\n'
-            for x in range(len(times)):
-                
-                res+= '\n' + str(x+1) + '. ' + self.scan_days[self.active[self.user_id][1][0]][1][1][times.index(min(times))] + ' - ' + self.scan_days[self.active[self.user_id][1][0]][1][2][times.index(min(times))]
-                if self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))] == self.user_id:
-                    res+= ' - Ваша запись'
-                else:
-                    res+= ' - @id' + str(self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))]) 
-                times[times.index(min(times))] = datetime.strptime('23:59', "%H:%M")
-
-        return res
-    
-    def o_end_time(self): # После выбора дня
-        return 'Выберите время окончания брони. Например, если Вы хотите записаться c 10:00 до 11:00, выберите 11:00 \nЕсли же вы хотите выбрать более точное время (до 1 минуты), то введите его с помощью клавиатуры \nЕсли пропали кнопки - нажмите на квадрат с четырмя точками правее поля ввода текста'
-    
-    def o_post_time(self):
-        res = f'Вы хотите забронировать учебку {self.active[self.user_id][1][0]} с {self.active[self.user_id][1][1][0]} до {self.active[self.user_id][1][1][1]}? \nЕсли да, нажмите "Подтвердить". \nЕсли нет, нажмите "Назад"'
-        return res
-    
-    def o_write(self):
-        res = f'Вы успешно забронировали учебку {self.active[self.user_id][1][0]} с {self.active[self.user_id][1][1][0]} до {self.active[self.user_id][1][1][1]}. \nДля новой записи нажмите "Начать"\nДля просмотра ваших записей нажмите "Посмотреть мои текущие записи"'
-        return res
-    
-    def o_check_my(self):
-        keys = list(self.scan_days)
-        res = ''
-        a = 1
-        for i in range(len(self.scan_days)):
-            cur_d = self.scan_days[keys[i]]
-            
-            for x in range(len(cur_d[1][0])):
-                if cur_d[1][0][x] == self.user_id:
-                    res+= str(a) + '. ' + str(keys[i]) + '; ' + str(cur_d[1][1][x]) + ' - ' + str(cur_d[1][2][x]) + '\n'
-                    a+=1
-        if res == '': return 'Записей нет'
-        return res
-
-    def o_del(self):
-        return 'Выберите запись, которую хотите удалить' 
-    
-    def o_s_del(self):
-        return 'Запись успешно удалена. \nДля новой записи нажмите "Начать"' 
-
-
-
-
-
-
-
-
-
-class Vk_keys(Vk_bot):
-    def __init__(self, request, user_id, active):
-        super().__init__(request, user_id, active)
-
-    # COLORS:
-    # PRIMARY - синий
-    # SECONDARY - белый/черный
-    # POSITIVE - зеленый
-    # NEGATIVE - красный
-
-    # Команды для клавиатуры:
-    # vk_keyboard = VkKeyboard() - Создание клавиатуры (ОБЯЗАТЕЛЬНО)
-    # keyboard = vk_keyboard.get_empty_keyboard() - Возврат пустой клавиатуры
-    # vk_keyboard.add_line() - Переход следующей кнопки на строчку ниже
-    # vk_keyboard.add_button('Выход', payload={'type': 'text'}, color=VkKeyboardColor.NEGATIVE) - Добавление кнопки
-    # keyboard = vk_keyboard.get_keyboard()  - Активация (возврат) клавиатуры (ОБЯЗАТЕЛЬНО (кроме случая вызова пустой клавиатуры))
-    
-    def k_empty(self):
-        vk_keyboard = VkKeyboard()
-        keyboard = vk_keyboard.get_empty_keyboard()
-        return keyboard
-
-    def k_menu_admin(self):
-        vk_keyboard = VkKeyboard()
-        vk_keyboard.add_button('Посмотреть все записи', payload={'type': 'text'}, color=VkKeyboardColor.NEGATIVE)
-        vk_keyboard.add_line()
-        vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard
-
-    def k_admin_day(self):
-        vk_keyboard = VkKeyboard()
-        vk_keyboard.add_button('Удалить строку', payload={'type': 'text'}, color=VkKeyboardColor.NEGATIVE)
-        vk_keyboard.add_line()
-        vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard
-
-    def k_prev(self):
-        vk_keyboard = VkKeyboard()
-        vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard
-
-    def k_nachat(self):
-        vk_keyboard = VkKeyboard()
-        # vk_keyboard.add_line()
-        vk_keyboard.add_button('Начать', payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard
-
-    def k_zapis(self):
-        vk_keyboard = VkKeyboard()
-        if self.count_user <8:
-            vk_keyboard.add_button('Выбрать день', payload={'type': 'text'}, color=VkKeyboardColor.POSITIVE)
-            vk_keyboard.add_line()
-        vk_keyboard.add_button('Посмотреть мои текущие записи', payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-        if self.user_id in self.ADMINS: 
-            vk_keyboard.add_line()
-            vk_keyboard.add_button('Админский режим', payload={'type': 'text'}, color=VkKeyboardColor.NEGATIVE)
-        # vk_keyboard.add_line()
-        # vk_keyboard.add_button('Посмотреть все свободные записи', payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-        vk_keyboard.add_line()
-        vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard
-
-    def k_day(self):
-        vk_keyboard = VkKeyboard()
-        all_items = os.listdir('./days')
-        for i in range(len(all_items)):
-            day = all_items[i].strip().split('.')[0]
-            vk_keyboard.add_button('' + day, payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-            vk_keyboard.add_line()
-        vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard
-    
-    def k_start_time(self):
-        vk_keyboard = VkKeyboard()
-        c = 1
-
-        if self.scan_days[self.active[self.user_id][1][0]][1][0].count(self.user_id) >= 2 and self.user_id not in self.ADMINS:
-            self.active[self.user_id][1][2] = False
-            c = 2
-        else:
-            self.active[self.user_id][1][2] = True
-
-            b = 0
-            b_b = 0
-            d = True
-            day = self.active[self.user_id][1][0]
-            r = 0
-            data, time = ad.act_day()
-            if data != self.active[self.user_id][1][0]:
-                time = '00:01'
-            while d:
-
-                
-                if  (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) < datetime.strptime(time, "%H:%M"):
-                    r = 1
-                else:
-                    for x in range(len(self.scan_days[day][1][0])):
-                        if datetime.strptime(self.scan_days[day][1][1][x], "%H:%M") - timedelta(minutes=20) <= (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) < datetime.strptime(self.scan_days[day][1][2][x], "%H:%M"):
-                            r = 1
-                
-                
-                if r == 0:
-                    vk_keyboard.add_button(datetime.strftime(datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b), "%H:%M"), payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-                    b_b+=1
-                    if b_b == 5:
-                        vk_keyboard.add_line()
-                        b_b = 0
-                r = 0
-                if datetime.strftime(datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b), "%H:%M") == '22:30': d = False
-                b+=1
-
-            if b_b != 0: vk_keyboard.add_line()
-
-            day = self.active[self.user_id][1][0]
-            a = 0
-            if self.scan_days[day][1][0] != [] and min(self.scan_days[day][1][1]) == '07:00' and max(self.scan_days[day][1][2]) == '23:00':
-                t_list = copy.deepcopy(self.scan_days[day][1])
-                del t_list[1][t_list[1].index(min(t_list[1]))]
-                for i in range(len(t_list[1])):
-                    if t_list[1][i] in t_list[2]: a+=1
-                if a == len(t_list[1]):
-                    c = 0
-
-        vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-
-        return keyboard, c
-    
-    def k_end_time(self):
-        vk_keyboard = VkKeyboard()
-
-        b = 1
-        b_b = 0
-        d = True
-        day = self.active[self.user_id][1][0]
-        r = 0
-        while d:
-            if ( (datetime.strptime(self.active[self.user_id][1][1][0], "%H:%M") + timedelta(hours=3)) < (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) ):
-                d = False
-                r = 1 
-            if (datetime.strptime(self.active[self.user_id][1][1][0], "%H:%M") + timedelta(minutes=20) >= (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) ):
-                r = 1 
-            else:
-                for x in range(len(self.scan_days[day][1][0])):
-                    if ( datetime.strptime(self.scan_days[day][1][1][x], "%H:%M") < (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) <= datetime.strptime(self.scan_days[day][1][2][x], "%H:%M") ):
-                        r = 1
-                        d = False
-                    if  ( datetime.strptime(self.active[self.user_id][1][1][0], "%H:%M") < datetime.strptime(self.scan_days[day][1][1][x], "%H:%M") and datetime.strptime(self.scan_days[day][1][2][x], "%H:%M") < (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) ):
-                        r = 1
-                        d = False
-
-
-            # for x in range(len(self.scan_days[day][1][0])):
-            #     if ( datetime.strptime(self.scan_days[day][1][1][x], "%H:%M") < (datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b)) <= datetime.strptime(self.scan_days[day][1][2][x], "%H:%M") ):
-            #         r = 1
-            if r == 0:
-                vk_keyboard.add_button(datetime.strftime(datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b), "%H:%M"), payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-                b_b+=1
-                if b_b == 5:
-                    vk_keyboard.add_line()
-                    b_b = 0
-            r = 0
-            if datetime.strftime(datetime.strptime('07:00', "%H:%M") + timedelta(minutes=30*b), "%H:%M") == '23:00': d = False
-            b+=1
-
-        if b_b != 0: vk_keyboard.add_line()
-        
-        vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard
-
-    def k_post_time(self):
-        vk_keyboard = VkKeyboard()
-        vk_keyboard.add_button('Подтвердить', payload={'type': 'text'}, color=VkKeyboardColor.POSITIVE)
-        vk_keyboard.add_line()
-        vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard
-
-    def k_write(self):
-        sd.write_ses(self.active, self.user_id)
-        vk_keyboard = VkKeyboard()
-        vk_keyboard.add_button('Начать', payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-        vk_keyboard.add_line()
-        vk_keyboard.add_button('Посмотреть мои текущие записи', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard
-    
-    def k_check_my(self, otvet):
-        vk_keyboard = VkKeyboard()
-        if otvet != 'Записей нет':
-            vk_keyboard.add_button('Удалить запись', payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-            vk_keyboard.add_line()
-        vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard
-    
-    def k_del(self):
-        vk_keyboard = VkKeyboard()
-
-        keys = list(self.scan_days)
-        res = ''
-        a = 1
-        b = 0
-        for i in range(len(self.scan_days)):
-            cur_d = self.scan_days[keys[i]]
-            
-            for x in range(len(cur_d[1][0])):
-                if cur_d[1][0][x] == self.user_id:
-                    res = str(a) + '. ' + str(keys[i]) + '; ' + str(cur_d[1][1][x]) + ' - ' + str(cur_d[1][2][x]) 
-                    # res = str(a)
-                    if b == 1:
-                        vk_keyboard.add_line() 
-                        b = 0
-                    b+=1
-                    vk_keyboard.add_button('' + res, payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-                    a+=1
-        vk_keyboard.add_line() 
-        vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
-        keyboard = vk_keyboard.get_keyboard()
-        return keyboard

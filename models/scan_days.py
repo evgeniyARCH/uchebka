@@ -1,11 +1,45 @@
 import os
 import copy
 
+def sort(all_items):
+    mouth_slov = {
+    'января': "01",
+    'февраля': "02",
+    'марта': "03",
+    'апреля': "04",
+    'мая': "05",
+    'июня': "06",
+    'июля': "07",
+    'августа': "08",
+    'сентября': "09",
+    'октября': "10",
+    'ноября': "11",
+    'декабря': "12"
+    }
+
+    all_items_new = []
+    for i in range(len(all_items)):
+        pre_a = all_items[i].strip().split(' ')[1]
+        a = pre_a.strip().split('.')[0]
+        b = all_items[i].strip().split(' ')[0]
+        if len(b) == 1: b= '0'+b
+        all_items_new.append(str(mouth_slov[a]) + '.' + str(b))
+        # print(all_items[i])
+
+    all_items_result = []
+    for x in range(len(all_items)):
+        all_items_result.append(all_items[all_items_new.index(min(all_items_new))])
+        # print(all_items_new[all_items_new.index(min(all_items_new))])
+        all_items_new[all_items_new.index(min(all_items_new))] = '99.99'
+    # print(all_items_result)
+    return all_items_result
+
 
 def scan_days():
     day = [None, [[], [], []]]
     days = {}
-    all_items = os.listdir('./days')
+    all_items_0 = os.listdir('./days')
+    all_items = sort(all_items_0)
     for i in range(len(all_items)):
         f = open('./days/' + all_items[i], 'r', encoding= 'utf-8') 
         f_list = f.read().strip().split('\n')
@@ -72,7 +106,8 @@ def del_ses(user_id, scan_days, stroka):
 def del_admin(data):
     day = int(data.strip().split()[0])
     time = int(data.strip().split()[1])
-    all_items = os.listdir('./days')
+    all_items_0 = os.listdir('./days')
+    all_items = sort(all_items_0)
     for i in range(len(all_items)):
         f = open('./days/' + all_items[i], 'r', encoding= 'utf-8') 
         f_list = f.read().strip().split('\n')
