@@ -76,8 +76,8 @@ def add_new_days():
                 f = open('./stirka/days/' + data + '.txt', 'w', encoding='utf-8')
                 f.close()
 
-                f = open('./logs.txt', 'w', encoding='utf-8')
-                f.close()
+                # f = open('./logs.txt', 'w', encoding='utf-8')
+                # f.close()
                 print('Пора')
             except:
                 pass
@@ -85,6 +85,36 @@ def add_new_days():
         # else: print('Еще рано')
         sleep(5)
 
+def week(day, year):
+    mouth_slov = {
+    'января': "01",
+    'февраля': "02",
+    'марта': "03",
+    'апреля': "04",
+    'мая': "05",
+    'июня': "06",
+    'июля': "07",
+    'августа': "08",
+    'сентября': "09",
+    'октября': "10",
+    'ноября': "11",
+    'декабря': "12"
+    }
+
+    week = {
+        '1': "(пн)",
+        '2': "(вт)",
+        '3': "(ср)",
+        '4': "(чт)",
+        '5': "(пт)",
+        '6': "(сб)",
+        '7': "(вс)",
+    }
+    n_day = day.strip().split(' ')[0]
+    mouth = mouth_slov[day.strip().split(' ')[1]]
+    y = datetime.datetime.strptime((n_day + '.' + mouth + '.' + str(year)), '%d.%m.%Y')
+    return week[str(y.weekday()+1)]
+    
 
 # add_new_days()
 # create(path = './days/', start= '31.10.2026', numbers= 5)

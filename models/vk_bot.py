@@ -94,8 +94,13 @@ class Vk_bot:
                     keyboard = Vk_keys_st.k_day(self)
 
                 elif self.request == 'Подтвердить' and active[self.user_id][1][0] != None and active[self.user_id][1][1][0] != '' and active[self.user_id][1][1][1] != '' and self.count_user < 1:
-                    keyboard = Vk_keys_st.k_write(self)
-                    otvet = Vk_otvets_st.o_write(self)
+                    if st_sd.write_ses(active, self.user_id):
+                        st_sd.create_log(self.user_id, active, 'Запись')
+                        keyboard = Vk_keys_st.k_write(self)
+                        otvet = Vk_otvets_st.o_write(self)
+                    else:
+                        otvet = 'На данное время уже записались. Нажмите "Назад" и выберите другое время'
+                        keyboard = Vk_keys_st.k_prev(self)
 
                 elif self.request == 'Посмотреть мои текущие записи':
                     otvet = Vk_otvets_st.o_check_my(self)

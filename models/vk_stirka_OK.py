@@ -43,11 +43,19 @@ class Vk_otvets_st():
         return res
 
     def o_zapis(self): # Запись на стирку
-        res = 'Вы выбрали режим записи на стирку\n\n'
+        res = '"Запись на стирку"\n\n'
         # if self.count_user <1:
-        res += 'Вы можете выбрать день и время для записи на стирку. Для этого нажмите "Выбрать день". \nЕсли вы хотите посмотреть свои текущие записи, нажмите "Посмотреть мои текущие записи"'
+        res += 'Выберите день стирки или просмотрите свои текущие записи'
         # else:
         #     res += 'К сожалению, у вас есть запись на ближайшие 7 дней. \nДля возможности создать новую запись удалите одну из своих записей'
+        tabl = '\n\nКоличество свободных мест по дням\n\n'
+        keys = list(self.scan_days)
+        # if self.count_user < 1:
+        for i in range(5):
+            tabl += '---' + keys[i] + ' ' + ad.week(keys[i], 2026) + '---\n'
+            tabl += 'Свободных ячеек: ' + str(18 - len(self.scan_days[keys[i]][1][0])) + '\n\n'
+
+        res += tabl
         return res
 
     def o_zapis_day(self):
@@ -59,8 +67,8 @@ class Vk_otvets_st():
         if c_c == 0:
             res = 'К сожалению, уже всё разобрали. Нажмите "Назад" и выберите другой день'
         elif c_c == 2:
-
-            res = f'Запись на этот день недоступна, т.к. Вы достигли недельного лимита \n\nВы уже записались на {format_st.detect_zap(self.user_id, self.active, self.scan_days_full)[1]} с {format_st.detect_zap(self.user_id, self.active, self.scan_days_full)[2][0]} до {format_st.detect_zap(self.user_id, self.active, self.scan_days_full)[2][1]}\n\nВы сможете записаться на стирку не раньше {sd.add_date(format_st.detect_zap(self.user_id, self.active, self.scan_days_full)[1], 7, 2026)} \n\nУдалите запись, чтобы перезаписаться или подождите разрешенной даты'
+            dt = format_st.detect_zap(self.user_id, self.active, self.scan_days_full)
+            res = f'Запись на этот день недоступна, т.к. Вы достигли недельного лимита \n\nВы уже записались на {dt[1]} с {dt[2][0]} до {dt[2][1]}\n\nВы сможете записаться на стирку не раньше {sd.add_date(dt[1], 7, 2026)} \n\nУдалите запись, чтобы перезаписаться или подождите разрешенной даты'
         
         if self.scan_days[self.active[self.user_id][1][0]][1][0] != []:
             
@@ -273,8 +281,7 @@ class Vk_keys_st():
         return keyboard
 
     def k_write(self):
-        sd.write_ses(self.active, self.user_id)
-        sd.create_log(self.user_id, self.active, 'Запись')
+        
         vk_keyboard = VkKeyboard()
         vk_keyboard.add_button('Начать', payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
         vk_keyboard.add_line()

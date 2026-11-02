@@ -1,6 +1,7 @@
 import os
 import copy
 import datetime
+from models import actual_datetime as ad
 
 def sort(all_items):
     mouth_slov = {
@@ -77,9 +78,22 @@ def scan_days():
 
 def write_ses(active, user_id): 
     f = open('./stirka/days/' + active[user_id][1][0] + '.txt', 'a+', encoding='utf-8')
+    f.seek(0)
+    a = f.read().strip().split('\n')
+    # print(a)
+    if a != ['']:
+        for i in range(len(a)):
+            b = a[i].strip().split(',')[0]
+            print(b)
+            print(datetime.datetime.strptime(b, '%H:%M') == datetime.datetime.strptime(active[user_id][1][1][0], '%H:%M'))
+            if datetime.datetime.strptime(b, '%H:%M') == datetime.datetime.strptime(active[user_id][1][1][0], '%H:%M'):
+                f.close()
+                return False
+    f.seek(0, 2)
     res = '\n' + str(active[user_id][1][1][0]) + ',' + str(active[user_id][1][1][1]) + '/' + str(user_id)
     f.write(res)
     f.close()
+    return True
 # scan_days()
 
 def del_ses(user_id, scan_days, stroka):
@@ -133,9 +147,20 @@ def del_admin(data):
         f.close()
 
 def create_log(user_id, active, command):
-    f = open('./logs.txt', 'a+', encoding='utf-8')
-    res = '\n' + str(active[user_id][1][0]) + ': ' + str(active[user_id][1][1][0]) + ' - ' + str(active[user_id][1][1][1]) + ' / @id' + str(user_id) + ' / ' + str(command)
-
+    f = open('./logs.txt', 'r', encoding='utf-8')
+    # f.seek(0)
+    a = f.read().strip().split('\n')
+    f.close()
+    date, time = ad.act_day()
+    if a != ['']:
+        if len(a) >= 100:
+            del a[0]
+    a.append(str(date) + '/' + str(time) + ' - ' + str(active[user_id][1][0]) + ': ' + str(active[user_id][1][1][0]) + ' - ' + str(active[user_id][1][1][1]) + ' / @id' + str(user_id) + ' / ' + str(command))
+    # res = str(active[user_id][1][0]) + ': ' + str(active[user_id][1][1][0]) + ' - ' + str(active[user_id][1][1][1]) + ' / @id' + str(user_id) + ' / ' + str(command)
+    f = open('./logs.txt', 'w', encoding='utf-8')
+    res = ''
+    for i in range(len(a)):
+        res+= '\n' + a[i]
     f.write(res)
     f.close()
 
