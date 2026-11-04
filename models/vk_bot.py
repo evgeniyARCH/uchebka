@@ -21,6 +21,7 @@ class Vk_bot:
         self.request = request
         self.user_id = user_id
         self.active = active 
+        # self.user_name = user_name
         if self.user_id in active:
             if active[self.user_id][2] == 'uchebka':
                 self.scan_days = sd.scan_days()
@@ -93,7 +94,7 @@ class Vk_bot:
                     otvet = Vk_otvets_st.o_zapis_day(self)
                     keyboard = Vk_keys_st.k_day(self)
 
-                elif self.request == 'Подтвердить' and active[self.user_id][1][0] != None and active[self.user_id][1][1][0] != '' and active[self.user_id][1][1][1] != '' and self.count_user < 1:
+                elif self.request == 'Подтвердить' and active[self.user_id][1][0] in self.scan_days and active[self.user_id][1][1][0] != '' and active[self.user_id][1][1][1] != '' and self.count_user < 1:
                     if st_sd.write_ses(active, self.user_id):
                         st_sd.create_log(self.user_id, active, 'Запись')
                         keyboard = Vk_keys_st.k_write(self)
@@ -144,7 +145,38 @@ class Vk_bot:
                         # if format_st.detect_zap(self.user_id, active, self.scan_days_full):
                             active[self.user_id][1][0] = self.request
                             keyboard, c_c= Vk_keys_st.k_start_time(self)
-                            otvet = Vk_otvets_st.o_start_time(self, c_c)
+                            if self.request in ['04 ноября', '05 ноября', '06 ноября']:
+                                f = open('./reserv/' + self.request + '.txt', 'r', encoding= 'utf-8') 
+                                otvet_list = f.read().strip().split('\n')
+                                f.close()
+                                res = ''
+                                res_q = 0
+                                if not self.count_user<1:
+                                    res_q = 1
+                                    dt = format_st.detect_zap(self.user_id, active, self.scan_days_full)
+                                    res+=f'Запись на этот день недоступна, т.к. Вы достигли недельного лимита \n\nВы уже записались на {dt[1]} с {dt[2][0]} до {dt[2][1]}\n\nВ следующий раз Вы сможете записаться на стирку, когда станет доступным {st_sd.add_date(dt[1], 7, 2026)} \n\nУдалите запись, чтобы перезаписаться или подождите разрешенной даты\n\n'
+                                for i in range(len(otvet_list)):
+                                    if i <= 1 and res_q == 0 and len(self.scan_days[self.request][1][1]) == 18:
+                                        res += otvet_list[i] + '\n'
+                                    elif 1<i<=3:
+                                        if i==2 and (res_q == 0 and not len(self.scan_days[self.request][1][1]) == 18):
+                                            res+= 'Выберите время начала стирки\n\n'
+                                        res += otvet_list[i] + '\n'
+                                    else:
+                                        
+                                        st_time = otvet_list[i].strip().split(' - ')[0]
+                                        
+                                        if st_time in self.scan_days[self.request][1][1]:
+                                            index_id = self.scan_days[self.request][1][1].index(st_time)
+                                            if self.scan_days[self.request][1][0][index_id] == 853767309:
+                                                res += otvet_list[i] + '\n'
+                                            else:
+                                                res += otvet_list[i] + ' @id' + str(self.scan_days[self.request][1][0][index_id]) + '\n'
+                                otvet = res
+
+                                
+                            else:
+                                otvet = Vk_otvets_st.o_start_time(self, c_c)
                             active[self.user_id][0].append('Выбрать день')
                         else: 
                             otvet = 'Вы ввели несуществующий в базе день. \nПопробуйте еще раз'
@@ -195,7 +227,7 @@ class Vk_bot:
                     otvet = Vk_otvets.o_zapis_day(self)
                     keyboard = Vk_keys.k_day(self)
 
-                elif self.request == 'Подтвердить' and active[self.user_id][1][0] != None and active[self.user_id][1][1][0] != '' and active[self.user_id][1][1][1] != '' and self.count_user < 8:
+                elif self.request == 'Подтвердить' and active[self.user_id][1][0] in self.scan_days and active[self.user_id][1][1][0] != '' and active[self.user_id][1][1][1] != '' and self.count_user < 8:
                     keyboard = Vk_keys.k_write(self)
                     otvet = Vk_otvets.o_write(self)
 

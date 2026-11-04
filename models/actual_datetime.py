@@ -117,4 +117,4 @@ def week(day, year):
     
 
 # add_new_days()
-# create(path = './days/', start= '31.10.2026', numbers= 5)
+# create(path = './stirka/days/', start= '28.10.2026', numbers= 11)

@@ -8,6 +8,12 @@ from models import stirka_sd as sd
 import os
 from models import format_st
 
+# API-ключ созданный ранее
+# token = "vk1.a._nf9C7t0KwBh6HzJM3gQkN4lgNf_qPya2oUqvbULK9E4qHYWXXrTF7kcX6AdFUXiCTdfbK3chprQLYXRgHcdLaH0Uc2uKMA8kv1pNirw3vg_Az0MLDHFX5eVD_J-eXYIMh5Ec2hxn3bGePkHomo24aug-i8xjTJIFTWImFYqD1V61ynHiv54c9qwGmkp_pUfwQTpBzbS1rfnugigjrzzRw"
+# token = "vk1.a.boY8K7k2aFtc3I4KLKfFNvTIFV3bXlVxN9gmC-cfwfb7x7Q1iU6I_AwzijgDdTztPYuO_UwmQkD0l6_OszDVNp8oMjPkP3Ijagb-6pN_3w0ZrNEVE6oTKBlMXNQeyIP_KktLmjygAQTg5-TgudQk9HMXNGoa0H2ddg22xoa_yZ-R198rij4MaXcvsPIbh6Sxvu79MADs6NyJNPWKP1tpyA"
+# Авторизуемся как сообщество
+# vk = vk_api.VkApi(token=token)
+
 
 class Vk_otvets_st():
     # def __init__(self, request, user_id, active):
@@ -26,6 +32,9 @@ class Vk_otvets_st():
             cur_d = self.scan_days_full[keys[i]]
             
             for x in range(len(cur_d[1][0])):
+                # user = []
+                # user = vk.method("users.get", {"user_ids": cur_d[1][0][x]})
+                # user_name = user[0]['last_name']
                 res+= str(x) + ' ' + str(cur_d[1][1][x]) + ' - ' + str(cur_d[1][2][x]) + ' @id' + str(cur_d[1][0][x]) + '\n'
                 a+=1
 
@@ -38,7 +47,7 @@ class Vk_otvets_st():
 
     def o_admin_logs(self):
         f = open('./logs.txt', 'r', encoding='utf-8')
-        res ='Логи\n\n' + f.read()
+        res ='Логи\n' + f.read()
         f.close()
         return res
 
@@ -68,7 +77,7 @@ class Vk_otvets_st():
             res = 'К сожалению, уже всё разобрали. Нажмите "Назад" и выберите другой день'
         elif c_c == 2:
             dt = format_st.detect_zap(self.user_id, self.active, self.scan_days_full)
-            res = f'Запись на этот день недоступна, т.к. Вы достигли недельного лимита \n\nВы уже записались на {dt[1]} с {dt[2][0]} до {dt[2][1]}\n\nВы сможете записаться на стирку не раньше {sd.add_date(dt[1], 7, 2026)} \n\nУдалите запись, чтобы перезаписаться или подождите разрешенной даты'
+            res = f'Запись на этот день недоступна, т.к. Вы достигли недельного лимита \n\nВы уже записались на {dt[1]} с {dt[2][0]} до {dt[2][1]}\n\nВ следующий раз Вы сможете записаться на стирку, когда станет доступным {sd.add_date(dt[1], 7, 2026)} \n\nУдалите запись, чтобы перезаписаться или подождите разрешенной даты'
         
         if self.scan_days[self.active[self.user_id][1][0]][1][0] != []:
             
@@ -81,13 +90,17 @@ class Vk_otvets_st():
                 times.append(datetime.strptime(self.scan_days[self.active[self.user_id][1][0]][1][1][i], "%H:%M")) 
                 
             if times != []: res+= '\n\nНиже указано время, которое уже занято на этот день:\n'
+
             for x in range(len(times)):
                 
                 res+= '\n' + str(x+1) + '. ' + self.scan_days[self.active[self.user_id][1][0]][1][1][times.index(min(times))] + ' - ' + self.scan_days[self.active[self.user_id][1][0]][1][2][times.index(min(times))]
                 if self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))] == self.user_id:
                     res+= ' - Ваша запись'
                 else:
-                    res+= ' - @id' + str(self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))]) 
+                    # user = []
+                    # user = vk.method("users.get", {"user_ids": (self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))])})
+                    # user_name = user[0]['last_name']
+                    res+= ' - @id' + str(self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))])
                 times[times.index(min(times))] = datetime.strptime('23:59', "%H:%M")
 
         return res
@@ -96,7 +109,7 @@ class Vk_otvets_st():
     #     return 'Выберите время окончания брони. \n\nВы можете воспользоваться кнопками или ввести точное время с клавиатуры (в формате 10:53) \n\nЕсли пропали кнопки - нажмите на квадрат с четырмя точками левее эмодзи'
     
     def o_post_time(self):
-        res = f'Вы хотите записаться на стирку на {self.active[self.user_id][1][0]} с {self.active[self.user_id][1][1][0]}? \nЕсли да, нажмите "Подтвердить". \nЕсли нет, нажмите "Назад"\n\nСледующая доступная для записи стирка будет {sd.add_date(self.active[self.user_id][1][0], 7, 2026)}'
+        res = f'Вы хотите записаться на стирку на {self.active[self.user_id][1][0]} с {self.active[self.user_id][1][1][0]}? \nЕсли да, нажмите "Подтвердить". \nЕсли нет, нажмите "Назад"\n\nВ следующий раз Вы сможете записаться на стирку, когда станет доступным {sd.add_date(self.active[self.user_id][1][0], 7, 2026)}'
         return res
     
     def o_write(self):

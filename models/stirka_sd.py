@@ -153,9 +153,9 @@ def create_log(user_id, active, command):
     f.close()
     date, time = ad.act_day()
     if a != ['']:
-        if len(a) >= 100:
+        if len(a) >= 60:
             del a[0]
-    a.append(str(date) + '/' + str(time) + ' - ' + str(active[user_id][1][0]) + ': ' + str(active[user_id][1][1][0]) + ' - ' + str(active[user_id][1][1][1]) + ' / @id' + str(user_id) + ' / ' + str(command))
+    a.append(str(date) + '/' + str(time) + ' - ' + str(active[user_id][1][0]) + ': ' + str(active[user_id][1][1][0]) + ' - ' + str(active[user_id][1][1][1]) + ' / ' + str(command) + ' / @id' + str(user_id) )
     # res = str(active[user_id][1][0]) + ': ' + str(active[user_id][1][1][0]) + ' - ' + str(active[user_id][1][1][1]) + ' / @id' + str(user_id) + ' / ' + str(command)
     f = open('./logs.txt', 'w', encoding='utf-8')
     res = ''

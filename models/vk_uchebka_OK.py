@@ -7,6 +7,11 @@ from models import actual_datetime as ad
 from models import scan_days as sd
 import os
 
+# API-ключ созданный ранее
+# token = "vk1.a._nf9C7t0KwBh6HzJM3gQkN4lgNf_qPya2oUqvbULK9E4qHYWXXrTF7kcX6AdFUXiCTdfbK3chprQLYXRgHcdLaH0Uc2uKMA8kv1pNirw3vg_Az0MLDHFX5eVD_J-eXYIMh5Ec2hxn3bGePkHomo24aug-i8xjTJIFTWImFYqD1V61ynHiv54c9qwGmkp_pUfwQTpBzbS1rfnugigjrzzRw"
+# token = "vk1.a.boY8K7k2aFtc3I4KLKfFNvTIFV3bXlVxN9gmC-cfwfb7x7Q1iU6I_AwzijgDdTztPYuO_UwmQkD0l6_OszDVNp8oMjPkP3Ijagb-6pN_3w0ZrNEVE6oTKBlMXNQeyIP_KktLmjygAQTg5-TgudQk9HMXNGoa0H2ddg22xoa_yZ-R198rij4MaXcvsPIbh6Sxvu79MADs6NyJNPWKP1tpyA"
+# Авторизуемся как сообщество
+# vk = vk_api.VkApi(token=token)
 
 class Vk_otvets():
     # def __init__(self, request, user_id, active):
@@ -43,6 +48,9 @@ class Vk_otvets():
             cur_d = self.scan_days[keys[i]]
             
             for x in range(len(cur_d[1][0])):
+                # user = []
+                # user = vk.method("users.get", {"user_ids": cur_d[1][0][x]})
+                # user_name = user[0]['last_name']
                 res+= str(x) + ' ' + str(cur_d[1][1][x]) + ' - ' + str(cur_d[1][2][x]) + ' @id' + str(cur_d[1][0][x]) + '\n'
                 a+=1
 
@@ -89,6 +97,9 @@ class Vk_otvets():
                 if self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))] == self.user_id:
                     res+= ' - Ваша запись'
                 else:
+                    # user = []
+                    # user = vk.method("users.get", {"user_ids": (self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))])})
+                    # user_name = user[0]['last_name']
                     res+= ' - @id' + str(self.scan_days[self.active[self.user_id][1][0]][1][0][times.index(min(times))]) 
                 times[times.index(min(times))] = datetime.strptime('23:59', "%H:%M")
 

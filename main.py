@@ -42,6 +42,8 @@ while True:
                     # scan_days = sd.scan_days()
                     # count_user = format.count_for_userid(event.user_id, scan_days)
                     # print(count_user)
+                    # user = vk.method("users.get", {"user_ids": event.user_id})
+                    # user_name = user[0]['first_name']
                     bot = vk_bot.Vk_bot(request, event.user_id, active)
                     message, keyboard, active = bot.otvet()
                     write_msg(event.user_id, message, keyboard)
