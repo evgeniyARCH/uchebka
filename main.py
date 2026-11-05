@@ -1,65 +1,35 @@
 import vk_api
-from vk_api.longpoll import VkLongPoll, VkEventType
-from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.utils import get_random_id
 
-from random import randint
-
-from datetime import datetime
-from time import sleep
-
-from models import vk_bot, format
-from models import scan_days as sd
-import time
-
+from models import vk_bot
 
 def write_msg(user_id, message, keyboard):
-    vk.method('messages.send', {'user_id': user_id, 'message': message, 'random_id': get_random_id(), 'keyboard': keyboard})
+    vk.method('messages.send',
+              {'user_id': user_id, 'message': message, 'random_id': get_random_id(), 'keyboard': keyboard})
 
+def send_msg(peer_id, text, keyboard='', attachment=''):
+    vk.messages.send(peer_id=peer_id, message=text, random_id=get_random_id(),
+                     keyboard=keyboard, attachment=attachment)
 
-# API-ключ созданный ранее
 AE_token = "ab70ca0707d94699fe22b0145df14e061b834b9671e0ec2f426919db9863fb006fc78f9e05f2f38aea67b"
-# token = "vk1.a._nf9C7t0KwBh6HzJM3gQkN4lgNf_qPya2oUqvbULK9E4qHYWXXrTF7kcX6AdFUXiCTdfbK3chprQLYXRgHcdLaH0Uc2uKMA8kv1pNirw3vg_Az0MLDHFX5eVD_J-eXYIMh5Ec2hxn3bGePkHomo24aug-i8xjTJIFTWImFYqD1V61ynHiv54c9qwGmkp_pUfwQTpBzbS1rfnugigjrzzRw"
-#token = "vk1.a.boY8K7k2aFtc3I4KLKfFNvTIFV3bXlVxN9gmC-cfwfb7x7Q1iU6I_AwzijgDdTztPYuO_UwmQkD0l6_OszDVNp8oMjPkP3Ijagb-6pN_3w0ZrNEVE6oTKBlMXNQeyIP_KktLmjygAQTg5-TgudQk9HMXNGoa0H2ddg22xoa_yZ-R198rij4MaXcvsPIbh6Sxvu79MADs6NyJNPWKP1tpyA"
-# Авторизуемся как сообщество
 vk = vk_api.VkApi(token=AE_token)
-# Работа с сообщениями
-longpoll = VkLongPoll(vk)
+longpoll = VkBotLongPoll(vk)
 
 active = {}
 
-# Основной цикл
-while True:
-    try:
-        for event in longpoll.listen():
+for event in longpoll.listen():
+    if event.type != VkBotEventType.MESSAGE_NEW: # Обработка только сообщений
+        continue
+    if event.from_chat or not event.from_user:   # Обработка только лс
+        continue
 
-            # Если пришло новое сообщение
-            if event.type == VkEventType.MESSAGE_NEW:
-            
-                # Если оно имеет метку для меня( то есть бота)
-                if event.to_me:
-                
-                    # Сообщение от пользователя
-
-                    request = event.text
-                    # scan_days = sd.scan_days()
-                    # count_user = format.count_for_userid(event.user_id, scan_days)
-                    # print(count_user)
-                    # user = vk.method("users.get", {"user_ids": event.user_id})
-                    # user_name = user[0]['first_name']
-                    bot = vk_bot.Vk_bot(request, event.user_id, active)
-                    message, keyboard, active = bot.otvet()
-                    write_msg(event.user_id, message, keyboard)
-    except:
-        print("Таймаут, переподключение...")
-        # vk_keyboard = VkKeyboard()
-        # keyboard = vk_keyboard.get_empty_keyboard()
-        # message = 'Произошла ошибка. Попробуйте другую команду'
-        # write_msg(event.user_id, message, keyboard)
-        time.sleep(5)  # Ждем минуту перед повторной попыткой
-    
-
-
-# a = vk_bot.Vk_bot('Записаться на стирку', 333)
-# a.otvet()
-
+    request = event.text
+    # scan_days = sd.scan_days()
+    # count_user = format.count_for_userid(event.user_id, scan_days)
+    # print(count_user)
+    # user = vk.method("users.get", {"user_ids": event.user_id})
+    # user_name = user[0]['first_name']
+    bot = vk_bot.Vk_bot(request, event.user_id, active)
+    message, keyboard, active = bot.otvet()
+    write_msg(event.user_id, message, keyboard)
