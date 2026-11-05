@@ -1,12 +1,5 @@
-import vk_api
-from vk_api.longpoll import VkLongPoll, VkEventType
-from vk_api.keyboard import VkKeyboard, VkKeyboardColor
-from vk_api.utils import get_random_id
-
-from models import actual_datetime as ad
 from models import scan_days as sd
 from models import stirka_sd as st_sd
-import os
 import copy
 from models import format
 from models import format_st
@@ -17,11 +10,10 @@ from models.vk_stirka_OK import Vk_keys_st, Vk_otvets_st
 
 class Vk_bot:
     def __init__(self, request, user_id, active):
-        print(request)
+        #print(request)
         self.request = request
         self.user_id = user_id
         self.active = active 
-        # self.user_name = user_name
         if self.user_id in active:
             if active[self.user_id][2] == 'uchebka':
                 self.scan_days = sd.scan_days()
@@ -34,58 +26,58 @@ class Vk_bot:
     # ADMIN_EVGEN = 548147571
 
     # active = { user_id: [[command1, command2,...], [day, stiralka, time, command(delete/create)]], user_name, tabl} #OLD 
-    # active = { user_id: [[command1, command2,...], [day, [n-start, n-end], True/False(Меньше двух записей в день?))]]} #NEW
+    # active = { user_id: \[ [command1, command2,...], [ day, [n-start, n-end], True/False(Меньше двух записей в день?) ] \] } #NEW
     
     def __str__(self):
         return f"Запрос {self.request}, ID пользователя {self.user_id}"
 
     def otvet(self):
-
         # Значения пустышки
         active = self.active
         otvet = 'Неизвестная команда. \nДля записи в учебку/на стирку нажмите "Начать"'
         keyboard = Vk_keys.k_nachat(self)
 
         primer_list = [[], [None, ['', ''], None], None]
+        # template = {"mode": None}
         
-        # if 0 == 0:
         try:
-            if self.user_id in active:
-                if self.request == 'Назад':
-                    self.request = active[self.user_id][0][-1]
-                    del active[self.user_id][0][-1]
+            if self.user_id in active and self.request == 'Назад':
+                self.request = active[self.user_id][0][-1]
+                del active[self.user_id][0][-1]
 
             if self.request == 'Начать':
                 # active[self.user_id] = primer_list.copy()
                 if self.user_id in active:
                     del active[self.user_id]
                 active[self.user_id] = copy.deepcopy(primer_list)
+                # ???
                 active[self.user_id][0].append('zero')
                 otvet = Vk_otvets.o_start(self)
                 keyboard = Vk_keys.k_start(self)
-
             elif self.request == 'zero':
                 otvet = 'Вы вышли из режима записи. \nДля записи в учебку/на стирку нажми "Начать"'
                 del active[self.user_id]
 
-            if self.user_id in active:
-                if self.request == 'Запись на стирку' and (active[self.user_id][2] == None or active[self.user_id][2] == 'stirka'):
+
+            # if self.user_id in active and (active[self.user_id]["mode"] == None or active[self.user_id][2] in ('stirka', 'uchebka')):
+            if self.user_id in active and (active[self.user_id][2] == None or active[self.user_id][2] in ('stirka', 'uchebka')):
+                if self.request == 'Запись на стирку':
+                    # active[self.user_id]["mode"] = 'stirka'
                     active[self.user_id][2] = 'stirka'
                     self.scan_days, self.scan_days_full = st_sd.scan_days()
                     self.count_user = format_st.count_for_userid(self.user_id, self.scan_days)
                     otvet = Vk_otvets_st.o_zapis(self)
                     keyboard = Vk_keys_st.k_zapis(self)
-                    active[self.user_id][0].append('Начать')
-                elif self.request == 'Запись в учебку' and (active[self.user_id][2] == None or active[self.user_id][2] == 'uchebka'):
+                elif self.request == 'Запись в учебку':
                     active[self.user_id][2] = 'uchebka'
                     self.scan_days = sd.scan_days()
                     self.count_user = format.count_for_userid(self.user_id, self.scan_days)
                     otvet = Vk_otvets.o_zapis(self)
                     keyboard = Vk_keys.k_zapis(self)
-                    active[self.user_id][0].append('Начать')
+                active[self.user_id][0].append('Начать')
 
 
-
+            # if self.user_id in active and active[self.user_id]["mode"] == 'stirka':
             if self.user_id in active and active[self.user_id][2] == 'stirka':
                 sucs_stirk = 1
                 if self.request == 'Выбрать день':
@@ -93,7 +85,6 @@ class Vk_bot:
                     active[self.user_id][1][1] = ['', '']
                     otvet = Vk_otvets_st.o_zapis_day(self)
                     keyboard = Vk_keys_st.k_day(self)
-
                 elif self.request == 'Подтвердить' and active[self.user_id][1][0] in self.scan_days and active[self.user_id][1][1][0] != '' and active[self.user_id][1][1][1] != '' and self.count_user < 1:
                     if st_sd.write_ses(active, self.user_id):
                         st_sd.create_log(self.user_id, active, 'Запись')
@@ -109,9 +100,9 @@ class Vk_bot:
                     active[self.user_id][0].append('Запись на стирку')
 
                 elif self.request == 'Удалить запись':
+                    active[self.user_id][0].append('Посмотреть мои текущие записи')
                     otvet = Vk_otvets_st.o_del(self)
                     keyboard = Vk_keys_st.k_del(self)
-                    active[self.user_id][0].append('Посмотреть мои текущие записи')
 
                 elif self.request == 'Админский режим' and (self.user_id in self.ADMINS):
                     active[self.user_id][0].append('Запись на стирку')
@@ -136,10 +127,8 @@ class Vk_bot:
                 else:
                     sucs_stirk = 0
 
-                
 
                 if sucs_stirk == 0:
-
                     if active[self.user_id][0][-1] == 'Запись на стирку':
                         if self.request in list(self.scan_days):
                         # if format_st.detect_zap(self.user_id, active, self.scan_days_full):
@@ -217,8 +206,6 @@ class Vk_bot:
                         active[self.user_id][0].append('Начать')
 
 
-
-
             if self.user_id in active and active[self.user_id][2] == 'uchebka':
                 sucs_uch = 1
                 if self.request == 'Выбрать день' and self.count_user < 8:
@@ -259,10 +246,8 @@ class Vk_bot:
                 else:
                     sucs_uch = 0
 
-                
 
                 if sucs_uch == 0:
-
                     if active[self.user_id][0][-1] == 'Запись в учебку' and self.count_user < 8:
                         if self.request in list(self.scan_days):
                             active[self.user_id][1][0] = self.request

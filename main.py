@@ -20,13 +20,7 @@ def main():
         if event.from_chat or not event.from_user:   # Обработка только лс
             continue
 
-        request = event.message.text
-        # scan_days = sd.scan_days()
-        # count_user = format.count_for_userid(event.user_id, scan_days)
-        # print(count_user)
-        # user = vk.method("users.get", {"user_ids": event.user_id})
-        # user_name = user[0]['first_name']
-        bot = vk_bot.Vk_bot(request, event.message.from_id, active)
+        bot = vk_bot.Vk_bot(event.message.text, event.message.from_id, active)
         message, keyboard, active = bot.otvet()
         send_msg(vk, event.message.from_id, message, keyboard=keyboard)
 
