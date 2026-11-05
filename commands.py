@@ -1,10 +1,16 @@
+from vk_api.utils import get_random_id
 admin_ids = (234583753, )
+
+
+def send_msg(vk, peer_id, text, keyboard='', attachment=''):
+    vk.messages.send(peer_id=peer_id, message=text, random_id=get_random_id(),
+                     keyboard=keyboard, attachment=attachment)
+
 
 ''' Данные о сообщении формируются так:
 (команда, id автора, роль автора, текст сообщения, id сообщения, id цели, роль цели,
 сообщение ошибки при ошибке, текст ответа, *остальное)
 '''
-
 def get_command_data(event, button=''):
     data = {"command": "", "author_id": 0, "author_role": "", "text": event.message.text,
             "mess_id": 0, "aim_id": 0, "aim_role": "",
