@@ -17,9 +17,6 @@ class Vk_otvets():
     # def __init__(self, request, user_id, active):
     #     super().__init__(request, user_id, active)
 
-    def o_start(self):
-        return 'Выберите режим - запись в учебку или на стирку'
-
     def o_menu_admin(self):
         return 'Добро пожаловать в Админский режим. \nДля дальнейших действий выбери функцию из предложенного списка'
 
@@ -211,7 +208,7 @@ class Vk_keys():
             vk_keyboard.add_button('Выбрать день', payload={'type': 'text'}, color=VkKeyboardColor.POSITIVE)
             vk_keyboard.add_line()
         vk_keyboard.add_button('Посмотреть мои текущие записи', payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-        if self.user_id in self.ADMINS: 
+        if self.user_id in self.ADMINS:
             vk_keyboard.add_line()
             vk_keyboard.add_button('Админский режим', payload={'type': 'text'}, color=VkKeyboardColor.NEGATIVE)
         # vk_keyboard.add_line()
@@ -228,7 +225,7 @@ class Vk_keys():
         for i in range(len(all_items)):
             day = all_items[i].strip().split('.')[0]
             vk_keyboard.add_button('' + day, payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
-            vk_keyboard.add_line()
+            #vk_keyboard.add_line()
         vk_keyboard.add_button('Назад', payload={'type': 'text'}, color=VkKeyboardColor.SECONDARY)
         keyboard = vk_keyboard.get_keyboard()
         return keyboard
