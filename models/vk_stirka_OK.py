@@ -4,9 +4,9 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from datetime import datetime, timedelta
 import copy
 from models import actual_datetime as ad
-from models import stirka_sd as sd
+from models import scan_days_wash as sd
 import os
-from models import format_st
+from models import format_wash
 
 # API-ключ созданный ранее
 # token = "vk1.a._nf9C7t0KwBh6HzJM3gQkN4lgNf_qPya2oUqvbULK9E4qHYWXXrTF7kcX6AdFUXiCTdfbK3chprQLYXRgHcdLaH0Uc2uKMA8kv1pNirw3vg_Az0MLDHFX5eVD_J-eXYIMh5Ec2hxn3bGePkHomo24aug-i8xjTJIFTWImFYqD1V61ynHiv54c9qwGmkp_pUfwQTpBzbS1rfnugigjrzzRw"
@@ -76,7 +76,7 @@ class Vk_otvets_st():
         if c_c == 0:
             res = 'К сожалению, уже всё разобрали. Нажмите "Назад" и выберите другой день'
         elif c_c == 2:
-            dt = format_st.detect_zap(self.user_id, self.active, self.scan_days_full)
+            dt = format_wash.detect_zap(self.user_id, self.active, self.scan_days_full)
             res = f'Запись на этот день недоступна, т.к. Вы достигли недельного лимита \n\nВы уже записались на {dt[1]} с {dt[2][0]} до {dt[2][1]}\n\nВ следующий раз Вы сможете записаться на стирку, когда станет доступным {sd.add_date(dt[1], 7, 2026)} \n\nУдалите запись, чтобы перезаписаться или подождите разрешенной даты'
         
         if self.scan_days[self.active[self.user_id][1][0]][1][0] != []:
@@ -231,7 +231,7 @@ class Vk_keys_st():
         c = 1
 
         # if self.scan_days[self.active[self.user_id][1][0]][1][0].count(self.user_id) >= 1 and self.user_id not in self.ADMINS:
-        if not format_st.detect_zap(self.user_id, self.active, self.scan_days_full)[0] or not self.count_user < 1:
+        if not format_wash.detect_zap(self.user_id, self.active, self.scan_days_full)[0] or not self.count_user < 1:
             self.active[self.user_id][1][2] = False
             c = 2
         else:

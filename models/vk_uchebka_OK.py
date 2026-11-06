@@ -1,17 +1,10 @@
-import vk_api
-from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from datetime import datetime, timedelta
 import copy
 from models import actual_datetime as ad
-from models import scan_days as sd
+from models import scan_days_study as sd
 import os
 
-# API-ключ созданный ранее
-# token = "vk1.a._nf9C7t0KwBh6HzJM3gQkN4lgNf_qPya2oUqvbULK9E4qHYWXXrTF7kcX6AdFUXiCTdfbK3chprQLYXRgHcdLaH0Uc2uKMA8kv1pNirw3vg_Az0MLDHFX5eVD_J-eXYIMh5Ec2hxn3bGePkHomo24aug-i8xjTJIFTWImFYqD1V61ynHiv54c9qwGmkp_pUfwQTpBzbS1rfnugigjrzzRw"
-# token = "vk1.a.boY8K7k2aFtc3I4KLKfFNvTIFV3bXlVxN9gmC-cfwfb7x7Q1iU6I_AwzijgDdTztPYuO_UwmQkD0l6_OszDVNp8oMjPkP3Ijagb-6pN_3w0ZrNEVE6oTKBlMXNQeyIP_KktLmjygAQTg5-TgudQk9HMXNGoa0H2ddg22xoa_yZ-R198rij4MaXcvsPIbh6Sxvu79MADs6NyJNPWKP1tpyA"
-# Авторизуемся как сообщество
-# vk = vk_api.VkApi(token=token)
 
 class Vk_otvets():
     # def __init__(self, request, user_id, active):
@@ -142,9 +135,6 @@ class Vk_otvets():
 
 
 class Vk_keys():
-    # def __init__(self, request, user_id, active):
-    #     super().__init__(request, user_id, active)
-
     # COLORS:
     # PRIMARY - синий
     # SECONDARY - белый/черный
@@ -195,9 +185,9 @@ class Vk_keys():
         keyboard = vk_keyboard.get_keyboard()
         return keyboard
 
-    def k_nachat(self):
+    @staticmethod
+    def k_nachat(admins):
         vk_keyboard = VkKeyboard()
-        # vk_keyboard.add_line()
         vk_keyboard.add_button('Начать', payload={'type': 'text'}, color=VkKeyboardColor.PRIMARY)
         keyboard = vk_keyboard.get_keyboard()
         return keyboard
